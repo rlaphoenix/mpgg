@@ -1,0 +1,46 @@
+name: ci
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # We only test what the latest versions of VapourSynth supports on Linux.
+        # Usually that is 3.8 (to keep Windows 7 support) and the latest version.
+        python-version: ['3.8', '3.10']
+        vapoursynth-version: [58, 59, 60, 61]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install VapourSynth R${{ matrix.vapoursynth-version }}
+      uses: rlaphoenix/install-vapoursynth-action@v2.0.1
+      with:
+        version: ${{ matrix.vapoursynth-version }}
+        cache: true
+    - name: Install Poetry
+      uses: abatilo/actions-poetry@v2.3.0
+    - name: Install project
+      run: poetry install --no-dev
+    - name: Install flake8 and isort
+      run: python -m pip install flake8 isort
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Check import order with isort
+      run: isort --check-only --diff .
+    - name: Build project
+      run: poetry build
