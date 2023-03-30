@@ -277,7 +277,7 @@ class MPGG:
         self.vfr = False
         return self
 
-    def floor(self, cycle: int = None, offsets: list[int] = None) -> MPGG:
+    def floor(self, cycle: int = None, offsets: list[int] = None, per_cell: bool = False) -> MPGG:
         """
         VFR to CFR by decimating interlaced sections to match progressive sections.
 
@@ -292,6 +292,7 @@ class MPGG:
         Parameters:
             cycle: Defaults to the pulldown cycle.
             offsets: Defaults to keeping the last frame of each cycle.
+            per_cell: Reset cycle when entering new VOB Cells. Source must be a VOB.
         """
         cycle = cycle or self.pulldown
         if cycle:
@@ -304,6 +305,16 @@ class MPGG:
             wanted_fps_num = self.clip.fps.numerator - (self.clip.fps.numerator / cycle)
             progressive_sections = group_numbers([n for n, f in enumerate(self.flags) if f["progressive_frame"]])
             interlaced_sections = group_numbers([n for n, f in enumerate(self.flags) if not f["progressive_frame"]])
+
+            if per_cell:
+                vob_indexes = [
+                    int(cell_range.split("-")[0])
+                    for cell_range in self.clip.get_frame(0).props["PVSVobIdIndexes"].decode().split(" ")
+                ]
+                if 0 not in vob_indexes:
+                    vob_indexes = [0] + vob_indexes
+            else:
+                vob_indexes = []
 
             self.clip = core.std.Splice([x for _, x in sorted(
                 [
@@ -318,6 +329,19 @@ class MPGG:
                 ] + [
                     (
                         x[0],
+                        core.std.Splice([
+                            # TODO: curr + 1?
+                            core.std.SelectEvery(
+                                self.clip[x[0]:x[-1] + 1][prev:curr + 1],
+                                cycle=cycle,
+                                offsets=offsets
+                            )
+                            for i, (prev, curr) in enumerate(zip(
+                                [max(0, index - x[0]) for index in vob_indexes],
+                                [max(0, index - x[0]) for index in vob_indexes][1:]
+                            ))
+                        ])
+                        if vob_indexes else
                         core.std.SelectEvery(
                             self.clip[x[0]:x[-1] + 1],
                             cycle,
