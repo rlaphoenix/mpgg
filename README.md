@@ -45,7 +45,7 @@ on your behalf.
 #### Software
 
 - [MKVToolnix] (specifically mkvextract) for demuxing MPEG streams from MKV containers.
-- [DGIndex] for automatic frame-indexing of MPEG streams.
+- [DGIndex] v1.5.8+ for automatic frame-indexing of MPEG streams.
 
 Make sure you put them in your current working directory, in the installation directory, or put the directory path in
 your `PATH` environment variable. If you do not do this then their binaries will not be able to be found.
