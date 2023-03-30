@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import functools
+import inspect
 import math
 from collections import Counter
 from pathlib import Path
@@ -192,8 +193,23 @@ class MPGG:
             # causes conflicts with the clip positional argument
             raise ValueError("Invalid kernel arguments, no positional arguments are allowed")
 
-        deinterlaced_tff = kernel(self.clip, TFF=True)
-        deinterlaced_bff = kernel(self.clip, TFF=False)
+        kernel_func = kernel.func
+        kernel_args = inspect.signature(kernel_func).parameters
+
+        field_order_arg = next(iter(
+            possible_arg
+            for possible_arg in ("tff", "TFF")
+            if possible_arg in kernel_args
+        ), None)
+        if not field_order_arg:
+            raise ValueError(
+                "The kernel does not have a tff/TFF keyword argument but it is required. "
+                "You may wrap the kernel in a lambda to proxy the tff argument manually. E.g., "
+                "`lambda clip, tff: the_kernel(clip, field=0 if tff else 1)`"
+            )
+
+        deinterlaced_tff = kernel(self.clip, **{field_order_arg: True})
+        deinterlaced_bff = kernel(self.clip, **{field_order_arg: False})
 
         fps_factor = deinterlaced_tff.fps.numerator / deinterlaced_tff.fps.denominator
         fps_factor = fps_factor / (self.clip.fps.numerator / self.clip.fps.denominator)
