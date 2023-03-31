@@ -9,13 +9,50 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    # compilation of zimg v2.8 and v2.9 fails on ubuntu-22.04 for some reason
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
-        # We only test what the latest versions of VapourSynth supports on Linux.
-        # Usually that is 3.8 (to keep Windows 7 support) and the latest version.
-        python-version: ['3.8', '3.10']
-        vapoursynth-version: [58, 59, 60, 61]
+        include:
+          # this is a matrix of all 3.8-3.11 VapourSynth versions
+          - python-version: '3.8'
+            vapoursynth-version: '49'
+          - python-version: '3.8'
+            vapoursynth-version: '50'
+          - python-version: '3.8'
+            vapoursynth-version: '51'
+          - python-version: '3.8'
+            vapoursynth-version: '52'
+          - python-version: '3.9'
+            vapoursynth-version: '53'
+          - python-version: '3.9'
+            vapoursynth-version: '54'
+          - python-version: '3.9'
+            vapoursynth-version: '55'
+          - python-version: '3.9'
+            vapoursynth-version: '56'
+          - python-version: '3.9'
+            vapoursynth-version: '57'
+          - python-version: '3.8'
+            vapoursynth-version: '58'
+          - python-version: '3.10'
+            vapoursynth-version: '58'
+          - python-version: '3.8'
+            vapoursynth-version: '59'
+          - python-version: '3.10'
+            vapoursynth-version: '59'
+          - python-version: '3.8'
+            vapoursynth-version: '60'
+          - python-version: '3.10'
+            vapoursynth-version: '60'
+          - python-version: '3.8'
+            vapoursynth-version: '61'
+          - python-version: '3.10'
+            vapoursynth-version: '61'
+          - python-version: '3.8'
+            vapoursynth-version: '62'
+          - python-version: '3.11'
+            vapoursynth-version: '62'
 
     steps:
     - uses: actions/checkout@v3

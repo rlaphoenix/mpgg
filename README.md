@@ -9,10 +9,10 @@
         <img src="https://github.com/rlaphoenix/mpgg/actions/workflows/ci.yml/badge.svg" alt="Build status">
     </a>
     <a href="https://python.org">
-        <img src="https://img.shields.io/badge/python-3.8%20%7C%7C%203.10-informational" alt="Python version">
+        <img src="https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-informational" alt="Python version">
     </a>
     <a href="https://vapoursynth.com">
-        <img src="https://img.shields.io/badge/vapoursynth-R58%2B-informational" alt="VapourSynth version">
+        <img src="https://img.shields.io/badge/vapoursynth-R49%2B-informational" alt="VapourSynth version">
     </a>
     <a href="https://deepsource.io/gh/rlaphoenix/mpgg/?ref=repository-badge">
         <img src="https://deepsource.io/gh/rlaphoenix/mpgg.svg/?label=active+issues&token=9rxkTrTRXcRYIVl8HjRu2sYX" alt="DeepSource">
