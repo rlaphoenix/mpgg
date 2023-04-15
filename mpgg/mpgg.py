@@ -222,11 +222,6 @@ class MPGG:
                     )
             else:
                 # == Interlaced ==
-                # Frame otherwise assumed to be interlaced or progressively encoded interlacing.
-                # It won't deinterlace progressive frames here unless recover() was run and detected
-                # that the frame was interlaced by detecting visual combing artifacts.
-                # Do note that deinterlacing progressively encoded interlaced frames don't always look
-                # the best, but not much can really be done in those cases.
                 order = f.props["_FieldBased"]
                 if f.props.get("_Combed", 0) != 0:
                     order = 2  # TODO: Don't assume TFF
