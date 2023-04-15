@@ -195,8 +195,8 @@ class MPGG:
         deinterlaced_tff = kernel(self.clip, TFF=True)
         deinterlaced_bff = kernel(self.clip, TFF=False)
 
-        fps_factor = deinterlaced_tff.fps.numerator / deinterlaced_tff.fps.denominator
-        fps_factor = fps_factor / (self.clip.fps.numerator / self.clip.fps.denominator)
+        fps_factor = (deinterlaced_tff.fps.numerator / deinterlaced_tff.fps.denominator) * \
+                     (self.clip.fps.denominator / self.clip.fps.numerator)
         if fps_factor not in (1.0, 2.0):
             # TODO: Add support for more, we might already support mod2, e.g., 2/4/8/16/e.t.c
             raise ValueError(
@@ -204,9 +204,13 @@ class MPGG:
                 "Only single-rate and double-rate deinterlacing is currently supported."
             )
 
-        def _d(n: int, f: vs.VideoFrame, c: vs.VideoNode, tff: vs.VideoNode, bff: vs.VideoNode, ff: int):
-            field_order = f.props["_FieldBased"]
-            combed = f.props.get("_Combed")
+        def _d(n: int, c: vs.VideoNode, tff: vs.VideoNode, bff: vs.VideoNode, ff: float):
+            # `n` is relative of `deinterlaced_tff` so fix the index to be relative of `clip` instead
+            real_n = math.floor(n / ff)
+            props = c[real_n].get_frame(0).props
+
+            field_order = props["_FieldBased"]
+            combed = props.get("_Combed")
             text = None
 
             if combed == 1:
@@ -217,14 +221,14 @@ class MPGG:
                     2: 1,  # n (assuming? tested with field=3 and works)
                     3: 2,  # b (assuming inverted, untested)
                     4: 1,  # u (assuming inverted, untested)
-                }[f.props["VFMMatch"]]
+                }[props["VFMMatch"]]
 
-            if field_order == 0 or f.props["PVSFlagProgressiveFrame"]:
+            if field_order == 0 or props["PVSFlagProgressiveFrame"]:
                 # == Progressive ==
                 rc = c
                 # duplicate if not a single-rate fps output
                 if ff > 1:
-                    rc = core.std.Interleave([rc] * ff)
+                    rc = core.std.Interleave([rc] * int(ff))  # TODO: floor/ceil instead?
                 if rc.format and tff.format and rc.format.id != tff.format.id:
                     rc = core.resize.Spline16(rc, format=tff.format.id)
                 if verbose:
@@ -251,9 +255,8 @@ class MPGG:
                 c=self.clip,
                 tff=deinterlaced_tff,
                 bff=deinterlaced_bff,
-                ff=int(fps_factor)  # TODO: floor/ceil instead?
-            ),
-            prop_src=self.clip
+                ff=fps_factor
+            )
         )
 
         return self
