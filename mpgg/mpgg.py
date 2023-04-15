@@ -206,8 +206,10 @@ class MPGG:
 
         def _d(n: int, f: vs.VideoFrame, c: vs.VideoNode, tff: vs.VideoNode, bff: vs.VideoNode, ff: int):
             field_order = f.props["_FieldBased"]
+            combed = f.props.get("_Combed")
+            text = None
 
-            if f.props.get("_Combed") == 1:
+            if combed == 1:
                 # we lost field order info by using VFM, we must rely on _Combed and VFMMatch now
                 field_order = {
                     0: 1,  # p
@@ -226,22 +228,19 @@ class MPGG:
                 if rc.format and tff.format and rc.format.id != tff.format.id:
                     rc = core.resize.Spline16(rc, format=tff.format.id)
                 if verbose:
-                    rc = core.text.Text(
-                        rc,
-                        # space it to keep recover()'s verbose logs visible
-                        "Progressive" + ["", "\n"]["_Combed" in f.props],
-                        alignment=3
-                    )
+                    text = "Progressive"
             else:
                 # == Interlaced ==
                 rc = {1: bff, 2: tff}[field_order]
                 if verbose:
                     field_order_s = {1: "BFF", 2: "TFF"}[field_order]
-                    rc = core.text.Text(
-                        rc,
-                        ("Deinterlaced (%s)" % field_order_s) + ["", "\n"]["_Combed" in f.props],
-                        alignment=3
-                    )
+                    text = f"Deinterlaced ({field_order_s})"
+
+            if text:
+                if combed is not None:
+                    # space it to keep recover()'s verbose logs visible
+                    text += "\n"
+                rc = core.text.Text(rc, text, alignment=3)
 
             return rc
 
