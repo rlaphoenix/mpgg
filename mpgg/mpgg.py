@@ -205,7 +205,19 @@ class MPGG:
             )
 
         def _d(n: int, f: vs.VideoFrame, c: vs.VideoNode, tff: vs.VideoNode, bff: vs.VideoNode, ff: int):
-            if f.props["PVSFlagProgressiveFrame"] or f.props.get("_Combed") == 0:
+            field_order = f.props["_FieldBased"]
+
+            if f.props.get("_Combed") == 1:
+                # we lost field order info by using VFM, we must rely on _Combed and VFMMatch now
+                field_order = {
+                    0: 1,  # p
+                    1: 2,  # c
+                    2: 1,  # n (assuming? tested with field=3 and works)
+                    3: 2,  # b (assuming inverted, untested)
+                    4: 1,  # u (assuming inverted, untested)
+                }[f.props["VFMMatch"]]
+
+            if field_order == 0 or f.props["PVSFlagProgressiveFrame"]:
                 # == Progressive ==
                 rc = c
                 # duplicate if not a single-rate fps output
@@ -222,16 +234,12 @@ class MPGG:
                     )
             else:
                 # == Interlaced ==
-                order = f.props["_FieldBased"]
-                if f.props.get("_Combed", 0) != 0:
-                    order = 2  # TODO: Don't assume TFF
-                rc = {0: c, 1: bff, 2: tff}[order]  # type: ignore
-                field_order = {0: "Progressive <!>", 1: "BFF", 2: "TFF"}[order]  # type: ignore
-
+                rc = {1: bff, 2: tff}[field_order]
                 if verbose:
+                    field_order_s = {1: "BFF", 2: "TFF"}[field_order]
                     rc = core.text.Text(
                         rc,
-                        ("Deinterlaced (%s)" % field_order) + ["", "\n"]["_Combed" in f.props],
+                        ("Deinterlaced (%s)" % field_order_s) + ["", "\n"]["_Combed" in f.props],
                         alignment=3
                     )
 
