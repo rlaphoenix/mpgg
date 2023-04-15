@@ -205,33 +205,42 @@ class MPGG:
             )
 
         def _d(n: int, f: vs.VideoFrame, c: vs.VideoNode, tff: vs.VideoNode, bff: vs.VideoNode, ff: int):
-            # Frame marked as progressive by DGIndex or VFM, skip deinterlacing
             if f.props["PVSFlagProgressiveFrame"] or f.props.get("_Combed") == 0:
+                # == Progressive ==
+                rc = c
                 # duplicate if not a single-rate fps output
-                rc = core.std.Interleave([c] * ff) if ff > 1 else c
+                if ff > 1:
+                    rc = core.std.Interleave([rc] * ff)
                 if rc.format and tff.format and rc.format.id != tff.format.id:
                     rc = core.resize.Spline16(rc, format=tff.format.id)
-                return core.text.Text(
-                    rc,
-                    # space it to keep recover()'s verbose logs visible
-                    "Progressive" + ["", "\n"]["_Combed" in f.props],
-                    alignment=3
-                ) if verbose else rc
-            # Frame otherwise assumed to be interlaced or progressively encoded interlacing.
-            # It won't deinterlace progressive frames here unless recover() was run and detected
-            # that the frame was interlaced by detecting visual combing artifacts.
-            # Do note that deinterlacing progressively encoded interlaced frames don't always look
-            # the best, but not much can really be done in those cases.
-            order = f.props["_FieldBased"]
-            if f.props.get("_Combed", 0) != 0:
-                order = 2  # TODO: Don't assume TFF
-            rc = {0: c, 1: bff, 2: tff}[order]  # type: ignore
-            field_order = {0: "Progressive <!>", 1: "BFF", 2: "TFF"}[order]  # type: ignore
-            return core.text.Text(
-                rc,
-                ("Deinterlaced (%s)" % field_order) + ["", "\n"]["_Combed" in f.props],
-                alignment=3
-            ) if verbose else rc
+                if verbose:
+                    rc = core.text.Text(
+                        rc,
+                        # space it to keep recover()'s verbose logs visible
+                        "Progressive" + ["", "\n"]["_Combed" in f.props],
+                        alignment=3
+                    )
+            else:
+                # == Interlaced ==
+                # Frame otherwise assumed to be interlaced or progressively encoded interlacing.
+                # It won't deinterlace progressive frames here unless recover() was run and detected
+                # that the frame was interlaced by detecting visual combing artifacts.
+                # Do note that deinterlacing progressively encoded interlaced frames don't always look
+                # the best, but not much can really be done in those cases.
+                order = f.props["_FieldBased"]
+                if f.props.get("_Combed", 0) != 0:
+                    order = 2  # TODO: Don't assume TFF
+                rc = {0: c, 1: bff, 2: tff}[order]  # type: ignore
+                field_order = {0: "Progressive <!>", 1: "BFF", 2: "TFF"}[order]  # type: ignore
+
+                if verbose:
+                    rc = core.text.Text(
+                        rc,
+                        ("Deinterlaced (%s)" % field_order) + ["", "\n"]["_Combed" in f.props],
+                        alignment=3
+                    )
+
+            return rc
 
         self.clip = core.std.FrameEval(
             deinterlaced_tff,
