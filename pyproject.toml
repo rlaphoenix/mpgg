@@ -23,20 +23,20 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
-pymp4 = "^1.2.0"
+pymp4 = "^1.4.0"
 pyd2v = "^1.3.0"
 VapourSynth = [
     # https://github.com/vapoursynth/vapoursynth/issues/858
-    {version = "^57", optional = true, python = "^3.9"},
-    {version = "^61", optional = true, python = "^3.10"},
-    {version = "^62", optional = true, python = ">=3.11 || ^3.8"},
+    {version = "57", optional = true, python = "~3.9"},
+    {version = "61", optional = true, python = "~3.10"},
+    {version = "62", optional = true, python = "~3.11 || ~3.8"},
 ]
-more-itertools = "^9.1.0"
+more-itertools = "^10.1.0"
 pymediainfo = "^6.0.1"
 
 [tool.poetry.dev-dependencies]
-pre-commit = "^3.2.1"
-mypy = "^1.1.1"
+pre-commit = "^3.4.0"
+mypy = "^1.5.1"
 isort = "^5.12.0"
 
 [tool.isort]

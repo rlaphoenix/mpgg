@@ -9,12 +9,11 @@ on:
 jobs:
   build:
 
-    # compilation of zimg v2.8 and v2.9 fails on ubuntu-22.04 for some reason
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         include:
-          # this is a matrix of all 3.8-3.11 VapourSynth versions
+          # this is a matrix of all supported VapourSynth versions
           - python-version: '3.8'
             vapoursynth-version: '49'
           - python-version: '3.8'
@@ -55,18 +54,18 @@ jobs:
             vapoursynth-version: '62'
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install VapourSynth R${{ matrix.vapoursynth-version }}
-      uses: rlaphoenix/install-vapoursynth-action@v2.0.1
+      uses: rlaphoenix/install-vapoursynth-action@v2.1.1
       with:
         version: ${{ matrix.vapoursynth-version }}
         cache: true
     - name: Install Poetry
-      uses: abatilo/actions-poetry@v2.3.0
+      uses: abatilo/actions-poetry@v2
     - name: Install project
       run: poetry install --no-dev
     - name: Install flake8 and isort
